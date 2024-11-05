@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using sports_up_backend.Models;
 
 namespace sports_up_backend.Controllers
 {

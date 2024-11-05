@@ -1,4 +1,4 @@
-namespace sports_up_backend
+namespace sports_up_backend.Models
 {
     public class WeatherForecast
     {
