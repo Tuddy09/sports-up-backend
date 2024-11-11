@@ -7,8 +7,6 @@
         public DateOnly Date { get; set; }
         public string Time { get; set; }
         public string Location { get; set; }
-        public decimal Latitude { get; set; }
-        public decimal Longitude { get; set; }
         public int TotalSpots { get; set; }
         public int AvailableSpots { get; set; }
         public string SkillLevel { get; set; }

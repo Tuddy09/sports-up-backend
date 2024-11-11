@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using sports_up_backend.Data_Transfer_Obejcts;
 using sports_up_backend.Database;
 using sports_up_backend.Models;
+using sports_up_backend.Constants;
 
 namespace sports_up_backend.Controllers
 {
@@ -103,8 +104,8 @@ namespace sports_up_backend.Controllers
                 Date = lobbyDTO.Date,
                 Time = lobbyDTO.Time,
                 Location = lobbyDTO.Location,
-                Latitude = lobbyDTO.Latitude,
-                Longitude = lobbyDTO.Longitude,
+                Latitude = PredefinedLocationCoordinates.Coordinates[lobbyDTO.Location].Latitude,
+                Longitude = PredefinedLocationCoordinates.Coordinates[lobbyDTO.Location].Longitude,
                 TotalSpots = lobbyDTO.TotalSpots,
                 AvailableSpots = lobbyDTO.AvailableSpots,
                 SkillLevel = lobbyDTO.SkillLevel,
