@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace sports_up_backend.Models
 {
@@ -7,6 +8,7 @@ namespace sports_up_backend.Models
         public int LobbyId { get; set; }
         public int OwnerId { get; set; }
         [ForeignKey("OwnerId")]
+        [JsonIgnore]
         public User Owner { get; set; } = null!;
         public string Sport { get; set; }
         public DateOnly Date { get; set; }

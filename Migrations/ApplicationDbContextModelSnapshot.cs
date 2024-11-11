@@ -76,19 +76,24 @@ namespace sports_up_backend.Migrations
 
             modelBuilder.Entity("sports_up_backend.Models.LobbyPlayer", b =>
                 {
-                    b.Property<int>("LobbyId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.Property<int>("LobbyPlayerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LobbyPlayerId"));
+
+                    b.Property<int>("LobbyId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.HasKey("LobbyId", "UserId");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LobbyPlayerId");
+
+                    b.HasIndex("LobbyId");
 
                     b.HasIndex("UserId");
 
