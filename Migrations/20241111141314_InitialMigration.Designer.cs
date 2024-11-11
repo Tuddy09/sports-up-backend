@@ -12,8 +12,8 @@ using sports_up_backend.Database;
 namespace sports_up_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241106184143_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20241111141314_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,8 +39,8 @@ namespace sports_up_backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<decimal>("Latitude")
                         .HasColumnType("decimal(9, 6)");
@@ -79,19 +79,24 @@ namespace sports_up_backend.Migrations
 
             modelBuilder.Entity("sports_up_backend.Models.LobbyPlayer", b =>
                 {
-                    b.Property<int>("LobbyId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.Property<int>("LobbyPlayerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LobbyPlayerId"));
+
+                    b.Property<int>("LobbyId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.HasKey("LobbyId", "UserId");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LobbyPlayerId");
+
+                    b.HasIndex("LobbyId");
 
                     b.HasIndex("UserId");
 
@@ -171,10 +176,6 @@ namespace sports_up_backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PrefferedSports")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

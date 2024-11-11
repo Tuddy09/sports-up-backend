@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace sports_up_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,8 +19,7 @@ namespace sports_up_backend.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PrefferedSports = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -35,7 +34,7 @@ namespace sports_up_backend.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OwnerId = table.Column<int>(type: "int", nullable: false),
                     Sport = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Date = table.Column<DateOnly>(type: "date", nullable: false),
                     Time = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Latitude = table.Column<decimal>(type: "decimal(9,6)", nullable: false),
@@ -88,14 +87,15 @@ namespace sports_up_backend.Migrations
                 name: "LobbyPlayers",
                 columns: table => new
                 {
+                    LobbyPlayerId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     LobbyId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    LobbyPlayerId = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LobbyPlayers", x => new { x.LobbyId, x.UserId });
+                    table.PrimaryKey("PK_LobbyPlayers", x => x.LobbyPlayerId);
                     table.ForeignKey(
                         name: "FK_LobbyPlayers_Lobbies_LobbyId",
                         column: x => x.LobbyId,
@@ -142,6 +142,11 @@ namespace sports_up_backend.Migrations
                 name: "IX_Lobbies_OwnerId",
                 table: "Lobbies",
                 column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LobbyPlayers_LobbyId",
+                table: "LobbyPlayers",
+                column: "LobbyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LobbyPlayers_UserId",

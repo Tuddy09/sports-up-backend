@@ -17,10 +17,6 @@ namespace sports_up_backend.Database
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure the composite primary key for the join table LobbyPlayers
-            modelBuilder.Entity<LobbyPlayer>()
-                .HasKey(lp => new { lp.LobbyId, lp.UserId });
-
             // Configure the relationships between entities
             modelBuilder.Entity<LobbyPlayer>()
                 .HasOne(lp => lp.Lobby)

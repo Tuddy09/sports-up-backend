@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using sports_up_backend.Data_Transfer_Obejcts;
 using sports_up_backend.Database;
 using sports_up_backend.Models;
 
@@ -19,6 +20,22 @@ namespace sports_up_backend.Controllers
         public LobbyPlayersController(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        // PUT: api/LobbyPlayers/Accept
+        [HttpPut("Accept")]
+        public async Task<IActionResult> AcceptLobbyPlayer(LobbyPlayerDTO lobbyPlayerDTO)
+        {
+            var lobbyPlayer = await _context.LobbyPlayers
+                .Where(lp => lp.LobbyId == lobbyPlayerDTO.LobbyId && lp.UserId == lobbyPlayerDTO.UserId)
+                .FirstOrDefaultAsync();
+            if (lobbyPlayer == null)
+            {
+                return NotFound();
+            }
+            lobbyPlayer.Status = LobbyPlayerStatus.Accepted;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         // GET: api/LobbyPlayers
@@ -73,12 +90,33 @@ namespace sports_up_backend.Controllers
             return NoContent();
         }
 
-        // POST: api/LobbyPlayers
+        // POST: api/LobbyPlayers/Request
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<LobbyPlayer>> PostLobbyPlayer(LobbyPlayer lobbyPlayer)
+        [HttpPost("Request")]
+        public async Task<ActionResult<LobbyPlayer>> PostLobbyPlayer(LobbyPlayerDTO lobbyPlayerDTO)
         {
+            // verify that the owner of the lobby is not trying to join the lobby and that the user has not already requested to join the lobby
+            var lobby = await _context.Lobbies.FindAsync(lobbyPlayerDTO.LobbyId);
+            if (lobby.OwnerId == lobbyPlayerDTO.UserId)
+            {
+                return BadRequest("Owner of the lobby cannot join the lobby");
+            }
+            if (_context.LobbyPlayers.Any(lp => lp.LobbyId == lobbyPlayerDTO.LobbyId && lp.UserId == lobbyPlayerDTO.UserId))
+            {
+                return BadRequest("User has requested already to join the lobby/is accepted already");
+            }
+            if (lobby.AvailableSpots <= 0)
+            {
+                return BadRequest("No available spots in the lobby");
+            }
+            var lobbyPlayer = new LobbyPlayer
+            {
+                LobbyId = lobbyPlayerDTO.LobbyId,
+                UserId = lobbyPlayerDTO.UserId,
+                Status = LobbyPlayerStatus.Pending
+            };
             _context.LobbyPlayers.Add(lobbyPlayer);
+            lobby.AvailableSpots--;
             try
             {
                 await _context.SaveChangesAsync();
@@ -96,6 +134,25 @@ namespace sports_up_backend.Controllers
             }
 
             return CreatedAtAction("GetLobbyPlayer", new { id = lobbyPlayer.LobbyId }, lobbyPlayer);
+        }
+
+        // DELETE: api/LobbyPlayers/Reject
+        [HttpDelete("Reject")]
+        public async Task<IActionResult> RejectLobbyPlayer(LobbyPlayerDTO lobbyPlayerDTO)
+        {
+            var lobbyPlayer = await _context.LobbyPlayers
+                .Where(lp => lp.LobbyId == lobbyPlayerDTO.LobbyId && lp.UserId == lobbyPlayerDTO.UserId)
+                .FirstOrDefaultAsync();
+            if (lobbyPlayer == null)
+            {
+                return NotFound();
+            }
+            _context.LobbyPlayers.Remove(lobbyPlayer);
+            // increase available spots in the lobby
+            var lobby = await _context.Lobbies.FindAsync(lobbyPlayerDTO.LobbyId);
+            lobby.AvailableSpots++;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         // DELETE: api/LobbyPlayers/5
