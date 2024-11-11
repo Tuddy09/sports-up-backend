@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using sports_up_backend.Data_Transfer_Obejcts;
 using sports_up_backend.Database;
 using sports_up_backend.Models;
 
@@ -42,6 +43,23 @@ namespace sports_up_backend.Controllers
             return lobby;
         }
 
+        // GET: api/Lobbies/Owned
+        [HttpGet("Owned/{ownerId}")]
+        public async Task<ActionResult<IEnumerable<Lobby>>> GetOwnedLobbies(int ownerId)
+        {
+            return await _context.Lobbies.Where(l => l.OwnerId == ownerId).ToListAsync();
+        }
+
+        // GET: api/Lobbies/Joined
+        [HttpGet("Joined/{userId}")]
+        public async Task<ActionResult<IEnumerable<Lobby>>> GetJoinedLobbies(int userId)
+        {
+            // Get all the lobbies that the user has joined and status is accepted in LobbyPlayer
+            return await _context.Lobbies
+                .Where(l => l.LobbyPlayers.Any(lp => lp.UserId == userId && lp.Status == LobbyPlayerStatus.Accepted))
+                .ToListAsync();
+        }
+
         // PUT: api/Lobbies/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
@@ -76,8 +94,23 @@ namespace sports_up_backend.Controllers
         // POST: api/Lobbies
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Lobby>> PostLobby(Lobby lobby)
+        public async Task<ActionResult<Lobby>> PostLobby(LobbyDTO lobbyDTO)
         {
+            var lobby = new Lobby
+            {
+                OwnerId = lobbyDTO.OwnerId,
+                Sport = lobbyDTO.Sport,
+                Date = lobbyDTO.Date,
+                Time = lobbyDTO.Time,
+                Location = lobbyDTO.Location,
+                Latitude = lobbyDTO.Latitude,
+                Longitude = lobbyDTO.Longitude,
+                TotalSpots = lobbyDTO.TotalSpots,
+                AvailableSpots = lobbyDTO.AvailableSpots,
+                SkillLevel = lobbyDTO.SkillLevel,
+                CreatedAt = DateTime.UtcNow
+            };
+
             _context.Lobbies.Add(lobby);
             await _context.SaveChangesAsync();
 

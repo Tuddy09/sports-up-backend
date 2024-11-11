@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.EntityFrameworkCore;
+using sports_up_backend.Data_Transfer_Obejcts;
 using sports_up_backend.Database;
 using sports_up_backend.Models;
 
@@ -35,7 +37,7 @@ namespace sports_up_backend.Controllers
 
         // POST: api/Auth/Login
         [HttpPost("Login")]
-        public async Task<ActionResult<User>> Login(LoginRequest user)
+        public async Task<ActionResult<User>> Login(LoginRequestDTO user)
         {
             var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
 
@@ -53,9 +55,5 @@ namespace sports_up_backend.Controllers
         }
 
     }
-    public class LoginRequest
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
+
 }
