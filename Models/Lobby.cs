@@ -9,7 +9,7 @@ namespace sports_up_backend.Models
         [ForeignKey("OwnerId")]
         public User Owner { get; set; } = null!;
         public string Sport { get; set; }
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
         public string Time { get; set; }
         public string Location { get; set; }
         [Column(TypeName = "decimal(9, 6)")]
