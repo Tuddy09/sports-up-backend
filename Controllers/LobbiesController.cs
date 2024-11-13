@@ -44,6 +44,37 @@ namespace sports_up_backend.Controllers
             return lobby;
         }
 
+        // GET: api/Lobbies/managelobby/{id}
+        [HttpGet("managelobby/{id}")]
+        public async Task<ActionResult<LobbyDTO>> GetLobbyDetails(int id)
+        {
+            // Retrieve the lobby based on its ID
+            var lobby = await _context.Lobbies
+                .Where(l => l.LobbyId == id)
+                .FirstOrDefaultAsync();
+
+            if (lobby == null)
+            {
+                return NotFound("Lobby not found.");
+            }
+
+            // Prepare the response DTO
+            var lobbyDetails = new LobbyDTO
+            {
+                OwnerId = lobby.OwnerId,
+                Sport = lobby.Sport,
+                Date = lobby.Date,
+                Time = lobby.Time,
+                Location = lobby.Location,
+                SkillLevel = lobby.SkillLevel,
+                AvailableSpots = lobby.AvailableSpots,
+                TotalSpots = lobby.TotalSpots
+            };
+
+            // Return the lobby details in the response
+            return Ok(lobbyDetails);
+        }
+
         // GET: api/Lobbies/Owned
         [HttpGet("Owned/{ownerId}")]
         public async Task<ActionResult<IEnumerable<Lobby>>> GetOwnedLobbies(int ownerId)
