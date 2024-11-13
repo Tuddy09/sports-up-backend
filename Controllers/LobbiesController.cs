@@ -71,6 +71,7 @@ namespace sports_up_backend.Controllers
             return lobby;
         }
 
+
         // GET: api/Lobbies/Owned
         [HttpGet("Owned/{ownerId}")]
         public async Task<ActionResult<IEnumerable<Lobby>>> GetOwnedLobbies(int ownerId)

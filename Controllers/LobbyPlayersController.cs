@@ -171,6 +171,34 @@ namespace sports_up_backend.Controllers
             return NoContent();
         }
 
+
+        // GET: api/LobbyPlayers/Requests/{lobbyId}
+        // This endpoint retrieves all pending join requests for a specific lobby.
+        [HttpGet("Requests/{lobbyId}")]
+        public async Task<ActionResult<IEnumerable<LobbyPlayerWithUserDTO>>> GetLobbyJoinRequests(int lobbyId)
+        {
+            var joinRequests = await _context.LobbyPlayers
+                .Where(lp => lp.LobbyId == lobbyId && lp.Status == LobbyPlayerStatus.Pending)
+                .Include(lp => lp.User)
+                .Select(lp => new LobbyPlayerWithUserDTO
+                {
+                    LobbyId = lp.LobbyId,
+                    UserId = lp.UserId,
+                    Username = lp.User.Username,
+                    Email = lp.User.Email,
+                    Status = lp.Status
+                })
+                .ToListAsync();
+
+            if (!joinRequests.Any())
+            {
+                return NotFound("No pending join requests found for this lobby.");
+            }
+
+            return Ok(joinRequests);
+        }
+
+
         private bool LobbyPlayerExists(int id)
         {
             return _context.LobbyPlayers.Any(e => e.LobbyId == id);
