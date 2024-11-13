@@ -30,6 +30,33 @@ namespace sports_up_backend.Controllers
             return await _context.Lobbies.ToListAsync();
         }
 
+        // GET: api/Lobbies/{userId}/Available
+        [HttpGet("{userId}/Available")]
+        public async Task<ActionResult<IEnumerable<Lobby>>> GetAvailableLobbies(int userId)
+        {
+            // return all the lobbies that are not full
+            // and the user is not the owner
+            // and the lobby is not in the past
+            List<Lobby> lobbies = await _context.Lobbies
+                .Where(l => l.AvailableSpots > 0)
+                .Where(l => l.OwnerId != userId)
+                .Where(l => l.Date >= DateOnly.FromDateTime(DateTime.Now))
+                .ToListAsync();
+            // return all the lobbies that the user has not joined
+            List<Lobby> availableLobbies = new List<Lobby>();
+            foreach (var lobby in lobbies)
+            {
+                var lobbyPlayer = await _context.LobbyPlayers
+                    .Where(lp => lp.LobbyId == lobby.LobbyId && lp.UserId == userId)
+                    .FirstOrDefaultAsync();
+                if (lobbyPlayer == null)
+                {
+                    availableLobbies.Add(lobby);
+                }
+            }
+            return availableLobbies;
+        }
+
         // GET: api/Lobbies/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Lobby>> GetLobby(int id)
