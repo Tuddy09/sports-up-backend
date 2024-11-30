@@ -88,6 +88,29 @@ namespace sports_up_backend.Controllers
                 .Where(l => l.LobbyPlayers.Any(lp => lp.UserId == userId && lp.Status == LobbyPlayerStatus.Accepted))
                 .ToListAsync();
         }
+        
+        //Put: api/Lobbies/changeStatus
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{lobbyId}/{userId}")]
+        public async Task<IActionResult> MarkLobbyAsFinished(int lobbyId, int userId)
+        {
+            var lobby = await _context.Lobbies.FindAsync(lobbyId);
+            var user = await _context.Users.FindAsync(userId);
+            if (lobby == null || user == null)
+            {
+                return NotFound();    
+            }
+            if (lobby.OwnerId != userId)
+            {
+                return Unauthorized();
+            }
+            
+            lobby.Status = LobbyStatus.Finished;
+            _context.Update(lobby);
+            await _context.SaveChangesAsync();
+            
+            return NoContent();
+        }
 
         // PUT: api/Lobbies/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -119,6 +142,8 @@ namespace sports_up_backend.Controllers
 
             return NoContent();
         }
+        
+
 
         // POST: api/Lobbies
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -139,7 +164,7 @@ namespace sports_up_backend.Controllers
                 SkillLevel = lobbyDTO.SkillLevel,
                 CreatedAt = DateTime.UtcNow
             };
-
+            
             _context.Lobbies.Add(lobby);
             await _context.SaveChangesAsync();
 
