@@ -70,7 +70,19 @@ namespace sports_up_backend.Controllers
 
             return lobby;
         }
+        
+        // GET: api/Lobbies/Finished
+        [HttpGet("Finished/{userId}")]
+        public async Task<ActionResult<IEnumerable<Lobby>>> GetUserFinishedLobbies(int userId)
+        {
+            var finishedLobbies = await _context.Lobbies
+                .Where(l => 
+                l.LobbyPlayers.Any(lp => lp.UserId == userId) && 
+                l.Status == LobbyStatus.Finished)
+                .ToListAsync();
 
+            return finishedLobbies;
+        }
 
         // GET: api/Lobbies/Owned
         [HttpGet("Owned/{ownerId}")]
@@ -144,12 +156,17 @@ namespace sports_up_backend.Controllers
         }
         
 
-
         // POST: api/Lobbies
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Lobby>> PostLobby(LobbyDTO lobbyDTO)
         {
+            var user = await _context.Users.FindAsync(lobbyDTO.OwnerId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            
             var lobby = new Lobby
             {
                 OwnerId = lobbyDTO.OwnerId,
@@ -162,9 +179,20 @@ namespace sports_up_backend.Controllers
                 TotalSpots = lobbyDTO.TotalSpots,
                 AvailableSpots = lobbyDTO.AvailableSpots,
                 SkillLevel = lobbyDTO.SkillLevel,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            var newLobbyPlayer = new LobbyPlayer
+            {
+                Lobby = lobby,
+                UserId = lobby.OwnerId,
+                Status = LobbyPlayerStatus.Accepted
             };
             
+            user.OwnedLobbies.Add(lobby);
+            lobby.LobbyPlayers.Add(newLobbyPlayer);
+            
+            _context.LobbyPlayers.Add(newLobbyPlayer);
             _context.Lobbies.Add(lobby);
             await _context.SaveChangesAsync();
 
@@ -180,7 +208,10 @@ namespace sports_up_backend.Controllers
             {
                 return NotFound();
             }
-
+            
+            var lobbyPlayers = _context.LobbyPlayers.Where(lp => lp.LobbyId == id);
+            _context.LobbyPlayers.RemoveRange(lobbyPlayers);
+            
             _context.Lobbies.Remove(lobby);
             await _context.SaveChangesAsync();
 

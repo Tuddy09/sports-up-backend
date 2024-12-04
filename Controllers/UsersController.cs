@@ -93,6 +93,9 @@ namespace sports_up_backend.Controllers
             {
                 return NotFound();
             }
+            
+            var lobbyPlayers = _context.LobbyPlayers.Where(x => x.UserId == user.UserId);
+            _context.LobbyPlayers.RemoveRange(lobbyPlayers);
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
