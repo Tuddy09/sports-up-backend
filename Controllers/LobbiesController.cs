@@ -189,6 +189,8 @@ namespace sports_up_backend.Controllers
                 Status = LobbyPlayerStatus.Accepted
             };
             
+            //Nu sunt sigur daca aceste 2 adduri sunt necesare, eu deja adaug relatia dintre lobby ul creat si owner mai
+            //jos
             user.OwnedLobbies.Add(lobby);
             lobby.LobbyPlayers.Add(newLobbyPlayer);
             

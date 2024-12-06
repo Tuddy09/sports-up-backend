@@ -41,6 +41,27 @@ namespace sports_up_backend.Controllers
 
             return user;
         }
+        
+        //GET: api/Users/getUsersFromLobby
+        [HttpGet("lobbyusers/{lobbyId}")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsersFromLobby(int lobbyId)
+        {
+            //We will get only users from a finished lobby, because only those are rateable users
+            var lobbies = await _context.Lobbies
+                .AnyAsync(l => l.Status == LobbyStatus.Finished 
+                               && l.LobbyId == lobbyId);
+            if (!lobbies)
+            {
+                return NotFound("Lobby not found or is not finished");
+            }
+            
+            var users = await _context.LobbyPlayers
+                .Where(lp => lp.LobbyId == lobbyId)
+                .Select(lp => lp.User)
+                .ToListAsync();
+            
+            return users.Count > 0 ? users : NotFound();
+        }
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

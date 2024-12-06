@@ -76,13 +76,48 @@ namespace sports_up_backend.Controllers
         // POST: api/PlayerRatings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<PlayerRating>> PostPlayerRating(PlayerRating playerRating)
+        public async Task<IActionResult> LeaveRating(PlayerRating playerRating)
         {
+            var reviewer = _context.LobbyPlayers.FirstOrDefault(
+                lp => lp.UserId == playerRating.RatedByUserId);
+            var reviewed = _context.LobbyPlayers.FirstOrDefault(
+                lp => lp.UserId == playerRating.RatedByUserId);
+            
+            if (reviewer == null || reviewed == null)
+            {
+                return NotFound();
+            }
+
+            var lobbyPlayers = await _context.Lobbies
+                .Where(l => l.LobbyPlayers.Contains(reviewer) &&
+                            l.LobbyPlayers.Contains(reviewed) &&
+                            l.Status == LobbyStatus.Finished)
+                .ToListAsync();
+
+
+            if (lobbyPlayers.Any())
+            {
+                return NotFound();
+            }
+            
+            var reviewerUser = _context.Users.FirstOrDefault(u => u.UserId == reviewer.UserId);
+            var reviewedUser = _context.Users.FirstOrDefault(u => u.UserId == reviewed.UserId);
+
+            if (reviewerUser == null || reviewedUser == null)
+            {
+                return NotFound();
+            }
+            
+            reviewerUser.RatingsGiven.Add(playerRating);
+            reviewedUser.RatingsReceived.Add(playerRating);
+            
             _context.PlayerRatings.Add(playerRating);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetPlayerRating", new { id = playerRating.RatingId }, playerRating);
         }
+        
+        
 
         // DELETE: api/PlayerRatings/5
         [HttpDelete("{id}")]

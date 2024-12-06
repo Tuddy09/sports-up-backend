@@ -16,6 +16,7 @@ namespace sports_up_backend.Models
         [ForeignKey("RatedUserId")]
         [JsonIgnore]
         public User RatedUser { get; set; } = null!;
+            
         public string Category { get; set; }
         public int Stars { get; set; }
     }
