@@ -141,7 +141,6 @@ namespace sports_up_backend.Controllers
                 }
 
                 var user = await _context.Users
-                    .Include(u => u.OwnedLobbies)
                     .Include(u => u.RatingsReceived)
                     .FirstOrDefaultAsync(u => u.UserId == id);
 
@@ -150,18 +149,13 @@ namespace sports_up_backend.Controllers
                     return NotFound($"User with ID {id} not found");
                 }
 
-
-                //get the lobbies in which the user was accepted
-                var acceptedLobbies = await _context.Lobbies
-                    .Where(l => l.LobbyPlayers.Any(lp =>
-                        lp.UserId == id &&
-                        lp.Status == LobbyPlayerStatus.Accepted))
+                var userFinishedMatches = await _context.Lobbies
+                    .Where(l =>
+                    l.LobbyPlayers.Any(lp => lp.UserId == id) &&
+                    l.Status == LobbyStatus.Finished)
                     .ToListAsync();
 
-                //concat joined lobies with own lobies
-                var allMatches = acceptedLobbies.Concat(user.OwnedLobbies ?? Enumerable.Empty<Lobby>());
-
-                var mostFrequentSport = allMatches
+                var mostFrequentSport = userFinishedMatches
                     .GroupBy(l => l.Sport)
                     .OrderByDescending(g => g.Count())
                     .Select(g => g.Key)
@@ -177,7 +171,7 @@ namespace sports_up_backend.Controllers
                     Username = user.Username,
                     Age = user.Age,
                     AvatarId = user.AvatarId,
-                    TotalMatchesPlayed = allMatches.Count(),
+                    TotalMatchesPlayed = userFinishedMatches.Count(),
                     PreferredSport = mostFrequentSport,
                     Rating = (int)averageRating
                 });
