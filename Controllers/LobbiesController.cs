@@ -177,7 +177,7 @@ namespace sports_up_backend.Controllers
                 Latitude = PredefinedLocationCoordinates.Coordinates[lobbyDTO.Location].Latitude,
                 Longitude = PredefinedLocationCoordinates.Coordinates[lobbyDTO.Location].Longitude,
                 TotalSpots = lobbyDTO.TotalSpots,
-                AvailableSpots = lobbyDTO.AvailableSpots,
+                AvailableSpots = lobbyDTO.AvailableSpots -1 ,
                 SkillLevel = lobbyDTO.SkillLevel,
                 CreatedAt = DateTime.UtcNow,
             };
