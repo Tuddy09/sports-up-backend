@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using sports_up_backend.Data_Transfer_Obejcts;
 using sports_up_backend.Database;
 using sports_up_backend.Models;
 
@@ -103,6 +104,64 @@ namespace sports_up_backend.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.UserId == id);
+        }
+
+        [HttpGet("Profile/{id}")]
+        public async Task<ActionResult<UserProfileDTO>> GetUserProfile(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest("Invalid user ID");
+                }
+
+                var user = await _context.Users
+                    .Include(u => u.OwnedLobbies)
+                    .Include(u => u.RatingsReceived)
+                    .FirstOrDefaultAsync(u => u.UserId == id);
+
+                if (user == null)
+                {
+                    return NotFound($"User with ID {id} not found");
+                }
+
+
+                //get the lobbies in which the user was accepted
+                var acceptedLobbies = await _context.Lobbies
+                    .Where(l => l.LobbyPlayers.Any(lp =>
+                        lp.UserId == id &&
+                        lp.Status == LobbyPlayerStatus.Accepted))
+                    .ToListAsync();
+
+                //concat joined lobies with own lobies
+                var allMatches = acceptedLobbies.Concat(user.OwnedLobbies ?? Enumerable.Empty<Lobby>());
+
+                var mostFrequentSport = allMatches
+                    .GroupBy(l => l.Sport)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => g.Key)
+                    .FirstOrDefault() ?? "None";
+
+                var averageRating = user.RatingsReceived.Any()? user.RatingsReceived.Average(rating => rating.Stars): 0;
+
+                averageRating = averageRating - Math.Floor(averageRating) > 0.5 ? Math.Ceiling(averageRating) : Math.Floor(averageRating);
+
+
+                return Ok(new UserProfileDTO
+                {
+                    Username = user.Username,
+                    Age = user.Age,
+                    AvatarId = user.AvatarId,
+                    TotalMatchesPlayed = allMatches.Count(),
+                    PreferredSport = mostFrequentSport,
+                    Rating = (int)averageRating
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred");
+            }
         }
     }
 }

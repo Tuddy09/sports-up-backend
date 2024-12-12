@@ -29,6 +29,9 @@ namespace sports_up_backend.Controllers
                 return BadRequest("Email already in use.");
             }
 
+            //generate random number between 1 and 6
+            user.AvatarId = new Random().Next(1, 6);
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
