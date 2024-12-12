@@ -76,13 +76,39 @@ namespace sports_up_backend.Controllers
         // POST: api/PlayerRatings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<PlayerRating>> PostPlayerRating(PlayerRating playerRating)
+        public async Task<IActionResult> LeaveRating(PlayerRating playerRating)
         {
+            var reviewerUser = await _context.Users.FindAsync(playerRating.RatedByUserId);
+            var reviewedUser = await _context.Users.FindAsync(playerRating.RatedUserId);
+
+            if (reviewerUser == null || reviewedUser == null)
+            {
+                return NotFound("One or both users not found.");
+            }
+
+            // Validate that both users participated in a finished lobby
+            var lobbyPlayers = await _context.Lobbies
+                .Where(l => l.LobbyPlayers.Any(lp => lp.UserId == playerRating.RatedByUserId) &&
+                            l.LobbyPlayers.Any(lp => lp.UserId == playerRating.RatedUserId) &&
+                            l.Status == LobbyStatus.Finished)
+                .ToListAsync();
+
+            if (!lobbyPlayers.Any())
+            {
+                return BadRequest("Users have not participated in a finished lobby together.");
+            }
+
+            // Add the rating
+            reviewerUser.RatingsGiven.Add(playerRating);
+            reviewedUser.RatingsReceived.Add(playerRating);
+
             _context.PlayerRatings.Add(playerRating);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetPlayerRating", new { id = playerRating.RatingId }, playerRating);
         }
+        
+        
 
         // DELETE: api/PlayerRatings/5
         [HttpDelete("{id}")]

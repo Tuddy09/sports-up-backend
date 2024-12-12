@@ -17,17 +17,22 @@ namespace sports_up_backend.Database
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure the relationships between entities
-            modelBuilder.Entity<LobbyPlayer>()
-                .HasOne(lp => lp.Lobby)
-                .WithMany(l => l.LobbyPlayers)
-                .HasForeignKey(lp => lp.LobbyId)
+            modelBuilder.Entity<Lobby>()
+                .HasOne(l => l.Owner)
+                .WithMany(u => u.OwnedLobbies)
+                .HasForeignKey(l => l.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<LobbyPlayer>()
                 .HasOne(lp => lp.User)
                 .WithMany(u => u.LobbyPlayers)
                 .HasForeignKey(lp => lp.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LobbyPlayer>()
+                .HasOne(lp => lp.Lobby)
+                .WithMany(l => l.LobbyPlayers)
+                .HasForeignKey(lp => lp.LobbyId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PlayerRating>()
@@ -43,15 +48,15 @@ namespace sports_up_backend.Database
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Message>()
-                .HasOne(m => m.Lobby)
-                .WithMany(l => l.Messages)
-                .HasForeignKey(m => m.LobbyId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Message>()
                 .HasOne(m => m.Sender)
                 .WithMany(u => u.SentMessages)
                 .HasForeignKey(m => m.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Lobby)
+                .WithMany(l => l.Messages)
+                .HasForeignKey(m => m.LobbyId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

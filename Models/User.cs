@@ -9,6 +9,7 @@
         public int Age { get; set; }
         public int AvatarId { get; set; }
         public ICollection<Lobby> OwnedLobbies { get; } = new List<Lobby>();
+        
         public ICollection<LobbyPlayer> LobbyPlayers { get; } = new List<LobbyPlayer>();
         public ICollection<PlayerRating> RatingsGiven { get; } = new List<PlayerRating>();
         public ICollection<PlayerRating> RatingsReceived { get; } = new List<PlayerRating>();
