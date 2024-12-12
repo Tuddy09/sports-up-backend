@@ -1,4 +1,6 @@
-﻿namespace sports_up_backend.Data_Transfer_Obejcts
+﻿using sports_up_backend.Models;
+
+namespace sports_up_backend.Data_Transfer_Obejcts
 {
     public class LobbyDTO
     {

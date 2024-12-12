@@ -21,6 +21,8 @@ namespace sports_up_backend.Models
         public int TotalSpots { get; set; }
         public int AvailableSpots { get; set; }
         public string SkillLevel { get; set; }
+        
+        public LobbyStatus Status { get; set; } = LobbyStatus.Active;
         public DateTime CreatedAt { get; set; }
         public ICollection<LobbyPlayer> LobbyPlayers { get; } = new List<LobbyPlayer>();
         public ICollection<Message> Messages { get; } = new List<Message>();

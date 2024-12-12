@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using sports_up_backend.Data_Transfer_Obejcts;
 using sports_up_backend.Database;
 using sports_up_backend.Models;
 
@@ -40,6 +41,27 @@ namespace sports_up_backend.Controllers
             }
 
             return user;
+        }
+        
+        //GET: api/Users/getUsersFromLobby
+        [HttpGet("lobbyusers/{lobbyId}")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsersFromLobby(int lobbyId)
+        {
+            //We will get only users from a finished lobby, because only those are rateable users
+            var lobbies = await _context.Lobbies
+                .AnyAsync(l => l.Status == LobbyStatus.Finished 
+                               && l.LobbyId == lobbyId);
+            if (!lobbies)
+            {
+                return NotFound("Lobby not found or is not finished");
+            }
+            
+            var users = await _context.LobbyPlayers
+                .Where(lp => lp.LobbyId == lobbyId)
+                .Select(lp => lp.User)
+                .ToListAsync();
+            
+            return users.Count > 0 ? users : NotFound();
         }
 
         // PUT: api/Users/5
@@ -93,6 +115,9 @@ namespace sports_up_backend.Controllers
             {
                 return NotFound();
             }
+            
+            var lobbyPlayers = _context.LobbyPlayers.Where(x => x.UserId == user.UserId);
+            _context.LobbyPlayers.RemoveRange(lobbyPlayers);
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
@@ -103,6 +128,58 @@ namespace sports_up_backend.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.UserId == id);
+        }
+
+        [HttpGet("Profile/{id}")]
+        public async Task<ActionResult<UserProfileDTO>> GetUserProfile(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest("Invalid user ID");
+                }
+
+                var user = await _context.Users
+                    .Include(u => u.RatingsReceived)
+                    .FirstOrDefaultAsync(u => u.UserId == id);
+
+                if (user == null)
+                {
+                    return NotFound($"User with ID {id} not found");
+                }
+
+                var userFinishedMatches = await _context.Lobbies
+                    .Where(l =>
+                    l.LobbyPlayers.Any(lp => lp.UserId == id) &&
+                    l.Status == LobbyStatus.Finished)
+                    .ToListAsync();
+
+                var mostFrequentSport = userFinishedMatches
+                    .GroupBy(l => l.Sport)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => g.Key)
+                    .FirstOrDefault() ?? "None";
+
+                var averageRating = user.RatingsReceived.Any()? user.RatingsReceived.Average(rating => rating.Stars): 0;
+
+                averageRating = averageRating - Math.Floor(averageRating) > 0.5 ? Math.Ceiling(averageRating) : Math.Floor(averageRating);
+
+
+                return Ok(new UserProfileDTO
+                {
+                    Username = user.Username,
+                    Age = user.Age,
+                    AvatarId = user.AvatarId,
+                    TotalMatchesPlayed = userFinishedMatches.Count(),
+                    PreferredSport = mostFrequentSport,
+                    Rating = (int)averageRating
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred");
+            }
         }
     }
 }

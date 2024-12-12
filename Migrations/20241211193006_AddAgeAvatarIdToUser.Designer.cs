@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using sports_up_backend.Database;
 
@@ -11,9 +12,11 @@ using sports_up_backend.Database;
 namespace sports_up_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241211193006_AddAgeAvatarIdToUser")]
+    partial class AddAgeAvatarIdToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,9 +62,6 @@ namespace sports_up_backend.Migrations
                     b.Property<string>("Sport")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.Property<string>("Time")
                         .IsRequired()
@@ -199,7 +199,7 @@ namespace sports_up_backend.Migrations
                     b.HasOne("sports_up_backend.Models.User", "Owner")
                         .WithMany("OwnedLobbies")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Owner");
