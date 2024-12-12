@@ -78,39 +78,30 @@ namespace sports_up_backend.Controllers
         [HttpPost]
         public async Task<IActionResult> LeaveRating(PlayerRating playerRating)
         {
-            var reviewer = _context.LobbyPlayers.FirstOrDefault(
-                lp => lp.UserId == playerRating.RatedByUserId);
-            var reviewed = _context.LobbyPlayers.FirstOrDefault(
-                lp => lp.UserId == playerRating.RatedByUserId);
-            
-            if (reviewer == null || reviewed == null)
-            {
-                return NotFound();
-            }
-
-            var lobbyPlayers = await _context.Lobbies
-                .Where(l => l.LobbyPlayers.Contains(reviewer) &&
-                            l.LobbyPlayers.Contains(reviewed) &&
-                            l.Status == LobbyStatus.Finished)
-                .ToListAsync();
-
-
-            if (lobbyPlayers.Any())
-            {
-                return NotFound();
-            }
-            
-            var reviewerUser = _context.Users.FirstOrDefault(u => u.UserId == reviewer.UserId);
-            var reviewedUser = _context.Users.FirstOrDefault(u => u.UserId == reviewed.UserId);
+            var reviewerUser = await _context.Users.FindAsync(playerRating.RatedByUserId);
+            var reviewedUser = await _context.Users.FindAsync(playerRating.RatedUserId);
 
             if (reviewerUser == null || reviewedUser == null)
             {
-                return NotFound();
+                return NotFound("One or both users not found.");
             }
-            
+
+            // Validate that both users participated in a finished lobby
+            var lobbyPlayers = await _context.Lobbies
+                .Where(l => l.LobbyPlayers.Any(lp => lp.UserId == playerRating.RatedByUserId) &&
+                            l.LobbyPlayers.Any(lp => lp.UserId == playerRating.RatedUserId) &&
+                            l.Status == LobbyStatus.Finished)
+                .ToListAsync();
+
+            if (!lobbyPlayers.Any())
+            {
+                return BadRequest("Users have not participated in a finished lobby together.");
+            }
+
+            // Add the rating
             reviewerUser.RatingsGiven.Add(playerRating);
             reviewedUser.RatingsReceived.Add(playerRating);
-            
+
             _context.PlayerRatings.Add(playerRating);
             await _context.SaveChangesAsync();
 
