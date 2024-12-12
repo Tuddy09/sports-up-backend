@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using sports_up_backend.Data_Transfer_Obejcts;
 using sports_up_backend.Database;
 using sports_up_backend.Models;
 
@@ -76,10 +77,10 @@ namespace sports_up_backend.Controllers
         // POST: api/PlayerRatings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<IActionResult> LeaveRating(PlayerRating playerRating)
+        public async Task<IActionResult> LeaveRating(PlayerRatingDTO playerRatingDTO)
         {
-            var reviewerUser = await _context.Users.FindAsync(playerRating.RatedByUserId);
-            var reviewedUser = await _context.Users.FindAsync(playerRating.RatedUserId);
+            var reviewerUser = await _context.Users.FindAsync(playerRatingDTO.FromUserId);
+            var reviewedUser = await _context.Users.FindAsync(playerRatingDTO.ToUserId);
 
             if (reviewerUser == null || reviewedUser == null)
             {
@@ -88,8 +89,8 @@ namespace sports_up_backend.Controllers
 
             // Validate that both users participated in a finished lobby
             var lobbyPlayers = await _context.Lobbies
-                .Where(l => l.LobbyPlayers.Any(lp => lp.UserId == playerRating.RatedByUserId) &&
-                            l.LobbyPlayers.Any(lp => lp.UserId == playerRating.RatedUserId) &&
+                .Where(l => l.LobbyPlayers.Any(lp => lp.UserId == playerRatingDTO.FromUserId) &&
+                            l.LobbyPlayers.Any(lp => lp.UserId == playerRatingDTO.ToUserId) &&
                             l.Status == LobbyStatus.Finished)
                 .ToListAsync();
 
@@ -97,7 +98,14 @@ namespace sports_up_backend.Controllers
             {
                 return BadRequest("Users have not participated in a finished lobby together.");
             }
-
+            PlayerRating playerRating = new PlayerRating(
+                                                playerRatingDTO.FromUserId,
+                                                reviewerUser!,
+                                                playerRatingDTO.ToUserId,
+                                                reviewedUser!,
+                                                playerRatingDTO.Comment,
+                                                playerRatingDTO.Rating
+                                            );
             // Add the rating
             reviewerUser.RatingsGiven.Add(playerRating);
             reviewedUser.RatingsReceived.Add(playerRating);
@@ -105,7 +113,7 @@ namespace sports_up_backend.Controllers
             _context.PlayerRatings.Add(playerRating);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPlayerRating", new { id = playerRating.RatingId }, playerRating);
+            return CreatedAtAction("GetPlayerRating", new { id = playerRating.RatingId }, playerRatingDTO);
         }
         
         

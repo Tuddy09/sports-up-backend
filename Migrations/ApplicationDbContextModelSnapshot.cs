@@ -141,7 +141,7 @@ namespace sports_up_backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RatingId"));
 
-                    b.Property<string>("Category")
+                    b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

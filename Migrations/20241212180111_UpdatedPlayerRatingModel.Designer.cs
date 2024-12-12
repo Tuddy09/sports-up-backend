@@ -12,8 +12,8 @@ using sports_up_backend.Database;
 namespace sports_up_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241212124502_UpdatePlayerRatingModel")]
-    partial class UpdatePlayerRatingModel
+    [Migration("20241212180111_UpdatedPlayerRatingModel")]
+    partial class UpdatedPlayerRatingModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -144,7 +144,7 @@ namespace sports_up_backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RatingId"));
 
-                    b.Property<string>("Category")
+                    b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
